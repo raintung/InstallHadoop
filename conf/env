@@ -1,0 +1,2 @@
+export HIVE_HOME=/usr/lib/hive
+export HBASE_HOME=/usr/lib/hbase

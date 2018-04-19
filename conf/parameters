@@ -1,0 +1,14 @@
+username=hadoop
+password=pass
+usergroup=hadoop
+install_path=/tmp/shell2/
+install_components=jvm,hadoop
+jvm_user=root
+jvm_folder=java-8-oracle
+jvm_install=/usr/lib/jvm
+jvm_home=/usr/lib/jvm/java
+hadoop_user=hadoop
+hadoop_folder=hadoop-2.8.3
+hadoop_home=/node/hadoop
+hadoop_install=/node
+
