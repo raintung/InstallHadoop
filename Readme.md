@@ -6,7 +6,7 @@ The script only run in the **Master Node**, the **Data Node** will setup by mast
 
 ## Environment
 
-The enviroment required can execute the bash command, and had been test in those linux systems as below.
+The environment required can execute the bash command, and had been test in those linux systems as below.
 
 * Ubuntu 
 * Centos
