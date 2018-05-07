@@ -27,6 +27,22 @@ do
 	done < $file
 done
 
+
+MY_IP=`ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/'`
+for file in $NN_FILE
+do
+        while read line; do
+        	set -- $line
+        	if [ "$MY_IP" = "$2" ];  then
+			if [ ! "$HOSTNAME" = "$1" ]; then
+				echo "[INFO] Change the master hostname $HOSTNAME to $1"
+				hostnamectl set-hostname $1
+				exit 1
+			fi
+		fi
+	done < $file
+done
+
 echo "[INFO] Check the default folder and configuration file exist."
 if [ ! -d $PACKAGE_FOLDER ] || [ ! -d $CONF_FOLDER ] || [ ! -d $TEMPLATE_FOLDER ] ||  [ ! -f $NN_FILE ]  || [ ! -f $DN_FILE ]; then
 	echo "[FAILE] The default folder miss, quit the setup process."
@@ -61,12 +77,13 @@ SSH_HOME=~/.ssh
 [ ! -f ~/.ssh/id_rsa.pub ] && (yes|ssh-keygen -f ~/.ssh/id_rsa -t rsa -N "") && ( chmod 600 ~/.ssh/id_rsa.pub )
 
 echo "[INFO] ############### Begin config the full cluster  #################"
-SSH_HOME=~/.ssh
-while read line; do
+IFS=$'\n' read -d '' -r -a dnnodes < $DN_FILE
+for line in "${dnnodes[@]}"
+do
 	set -- $line
 	echo "[INFO] <<<<<<<<<<<<<<<<<<<<  Setup the DataNode [$1] ip: [$2]  >>>>>>>>>>>>>>>>>>>"
  	echo "[INFO] Set the SSH no password in the DataNode $1 ip: $2 name: $3 password: $4  $PROGDIR"
-        $PROGDIR/ssh_nopassword.expect $2 $3 $4 $SSH_HOME >/dev/null 2>&1
+        expect $PROGDIR/ssh_nopassword.expect $2 $3 $4 $SSH_HOME >/dev/null 2>&1
  	echo "[INFO] Create the user_group $USER_GROUP in the Node $1 $2"
 	ssh $3@$2 "addgroup $USER_GROUP"
  	echo "[INFO] Create the user $USER in the Node $1 $2"
@@ -89,7 +106,7 @@ while read line; do
  	#echo "[INFO] Setup the java config  $USER:$USER_PASSWORD in the Node $1 $2"
         #ssh $3@$2 "export COMPONENT_ENV=jvm;export WORK_FOLDER=$WORK_FOLDER;`cat $PROGDIR/install_component.sh`"
 	echo "[INFO] Set the SSH no password in the DataNode $1 ip: $2 name: $USER password: $USER_PASSWORD  $PROGDIR"
-	$PROGDIR/ssh_nopassword.expect $2 $USER $USER_PASSWORD $SSH_HOME >/dev/null 2>&1
+	expect $PROGDIR/ssh_nopassword.expect $2 $USER $USER_PASSWORD $SSH_HOME >/dev/null 2>&1
  	echo "[INFO] Set the user:$USER config:config_system_user.sh  $USER:$USER_PASSWORD in the Node:[$1 $2]"
 	ssh $USER@$2 "export WORK_FOLDER=$WORK_FOLDER;`cat $PROGDIR/config_system_user.sh`;source ~/.profile"	
 	echo "[INFO] Set the user:$USER hadoop  $USER:$USER_PASSWORD in the Node:[$1 $2]"
@@ -115,7 +132,7 @@ while read line; do
 		fi
 	done
 	echo "[INFO] <<<<<<<<<<<<<<<<<<<< Setup the DataNode [$1] ip: [$2]  finished. >>>>>>>>>>>>>>>>>>>"
-done < $DN_FILE
+done
 
 echo "[INFO] Create the user $USER and $USER_GROUP in the master"
 if [ $(getent group $USER_GROUP) ]; then
@@ -155,7 +172,7 @@ do
 	echo "[INFO] Execute expectshell [$expectshell]"
 	su $USER -c "$expectshell"
 	echo "[INFO] <<<<<<<<<<<<<<<<<<<<  Setup the user root ssh nopassword login for [$1] ip: [$2]  >>>>>>>>>>>>>>>>>>>"
-        $PROGDIR/ssh_nopassword.expect $2 $USER $USER_PASSWORD $SSH_HOME >/dev/null 2>&1
+        expect $PROGDIR/ssh_nopassword.expect $2 $USER $USER_PASSWORD $SSH_HOME >/dev/null 2>&1
 	done < $file
 done
 echo "[INFO] ................... Config master ssh nopassword login for cluster user complete.................."
